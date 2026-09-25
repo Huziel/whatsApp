@@ -56,9 +56,7 @@ export default {
         // Guardar token en localStorage
         localStorage.setItem("token", response.data.access_token)
 
-        alert("Login exitoso ✅")
-        // Redirigir a otra vista si tienes router
-        // this.$router.push("/dashboard")
+        await this.$router.push({ name: "Dashboard" })
       } catch (err) {
         this.error = "Credenciales incorrectas"
       } finally {
