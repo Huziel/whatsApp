@@ -1,0 +1,26 @@
+# Dependencies and generated assets
+**/node_modules/
+**/vendor/
+**/dist/
+**/public/build/
+**/public/hot
+
+# Local environment and secrets
+**/.env
+**/.env.*
+!**/.env.example
+**/auth.json
+
+# Runtime data, logs, and local databases
+**/*.log
+**/.phpunit.result.cache
+**/database/*.sqlite
+**/storage/*.key
+**/storage/logs/*
+!**/storage/logs/.gitignore
+
+# Editor and OS files
+**/.DS_Store
+**/.idea/
+**/.vscode/
+**/Thumbs.db
