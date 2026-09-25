@@ -57,3 +57,51 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## WhatsApp Cloud API webhook (test setup)
+
+The public callback endpoint is `GET` and `POST /webhooks/whatsapp`.
+
+1. Install the backend dependencies and prepare the local environment:
+
+   ```sh
+   composer install
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+   Set `WHATSAPP_VERIFY_TOKEN` to a private verification string you choose, and
+   `META_APP_SECRET` to the App Secret shown in your Meta app settings. Do not
+   commit `.env` or share either value. If Laravel configuration is cached,
+   refresh it after changing these settings with `php artisan config:clear`.
+
+2. Start Laravel so a tunnel can reach it:
+
+   ```sh
+   php artisan serve --host=0.0.0.0 --port=8000
+   ```
+
+3. Expose the local server through an HTTPS tunnel, for example with
+   [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/):
+
+   ```sh
+   cloudflared tunnel --url http://localhost:8000
+   ```
+
+   Use the HTTPS hostname printed by the tunnel. Keep the tunnel and Laravel
+   server running while configuring and testing the webhook.
+
+4. In the Meta app dashboard, open **WhatsApp > Configuration > Webhooks**
+   (or the webhook configuration for the WhatsApp product), then enter:
+
+   - **Callback URL:** `https://<HTTPS-hostname-from-your-tunnel>/webhooks/whatsapp`
+   - **Verify token:** the exact value configured in `WHATSAPP_VERIFY_TOKEN`
+
+   Save/verify the callback. Subscribe to the `messages` webhook field, then
+   use Meta's **Test** action for that field to send a test event. A successful
+   delivery receives HTTP 200. The endpoint logs only event type and safe
+   identifiers; it does not log message contents or phone numbers and does not
+   send automatic replies.
+
+   The POST handler validates `X-Hub-Signature-256` using the raw request body
+   and `META_APP_SECRET`; unsigned or incorrectly signed requests are rejected.
