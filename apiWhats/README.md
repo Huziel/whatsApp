@@ -101,7 +101,11 @@ The public callback endpoint is `GET` and `POST /webhooks/whatsapp`.
    use Meta's **Test** action for that field to send a test event. A successful
    delivery receives HTTP 200. The endpoint logs only event type and safe
    identifiers; it does not log message contents or phone numbers and does not
-   send automatic replies.
+   send automatic replies. Each valid change is also saved in the
+   `whatsapp_webhook_events` table. Run `php artisan migrate --force` during
+   deployment to create the table. Stored columns include the event type,
+   WhatsApp business account ID, business phone-number ID, message IDs, and
+   timestamps; message text and sender phone numbers are not stored.
 
    The POST handler validates `X-Hub-Signature-256` using the raw request body
    and `META_APP_SECRET`; unsigned or incorrectly signed requests are rejected.

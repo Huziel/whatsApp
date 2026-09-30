@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\WhatsAppWebhookEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -64,13 +65,23 @@ class WhatsAppWebhookController extends Controller
                 $value = is_array($change['value'] ?? null) ? $change['value'] : [];
                 $metadata = is_array($value['metadata'] ?? null) ? $value['metadata'] : [];
                 $messageIds = $this->messageIds($value);
+                $eventType = $this->safeIdentifier($change['field'] ?? null)
+                    ?? $this->safeIdentifier(is_array($payload) ? ($payload['object'] ?? null) : null)
+                    ?? 'unknown';
+                $businessAccountId = $this->safeIdentifier($entry['id'] ?? null);
+                $phoneNumberId = $this->safeIdentifier($metadata['phone_number_id'] ?? null);
+
+                WhatsAppWebhookEvent::create([
+                    'event_type' => $eventType,
+                    'business_account_id' => $businessAccountId,
+                    'phone_number_id' => $phoneNumberId,
+                    'message_ids' => $messageIds,
+                ]);
 
                 Log::info('WhatsApp webhook event received', [
-                    'event_type' => $this->safeIdentifier($change['field'] ?? null)
-                        ?? $this->safeIdentifier(is_array($payload) ? ($payload['object'] ?? null) : null)
-                        ?? 'unknown',
-                    'business_account_id' => $this->safeIdentifier($entry['id'] ?? null),
-                    'phone_number_id' => $this->safeIdentifier($metadata['phone_number_id'] ?? null),
+                    'event_type' => $eventType,
+                    'business_account_id' => $businessAccountId,
+                    'phone_number_id' => $phoneNumberId,
                     'message_ids' => $messageIds,
                 ]);
             }

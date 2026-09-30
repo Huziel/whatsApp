@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\WhatsAppWebhookEvent;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class WhatsAppWebhookTest extends TestCase
 {
+    use RefreshDatabase;
+
     private const VERIFY_TOKEN = 'test-whatsapp-verify-token';
 
     private const APP_SECRET = 'test-meta-app-secret';
@@ -74,8 +78,17 @@ class WhatsAppWebhookTest extends TestCase
             $payload,
         );
 
-        $response->assertOk()->assertExactJson(['status' => 'ok']);
+        $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+        $response->assertExactJson(['status' => 'ok']);
         $this->assertStringNotContainsString('private message text', $response->getContent());
+
+        $storedEvent = WhatsAppWebhookEvent::query()->sole();
+        $this->assertSame('messages', $storedEvent->event_type);
+        $this->assertSame('business-account-123', $storedEvent->business_account_id);
+        $this->assertSame('phone-id-456', $storedEvent->phone_number_id);
+        $this->assertSame(['wamid.test-789'], $storedEvent->message_ids);
+        $this->assertStringNotContainsString('15551234567', json_encode($storedEvent->getAttributes()));
+        $this->assertStringNotContainsString('private message text', json_encode($storedEvent->getAttributes()));
 
         Log::shouldHaveReceived('info')
             ->once()
